@@ -5,45 +5,34 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/zulkou/pokedex/internal/commands"
+	"github.com/zulkou/pokedex/internal/config"
 )
 
-type cliCommand struct {
-	name        string
-	description string
-	callback    func() error
-}
-
-var commandMap map[string]cliCommand
-
-func initializeCommand() {
-    commandMap = map[string]cliCommand{
+func InitializeCommand() {
+    commands.Commands = map[string]commands.CliCommand{
         "exit": {
-            name:        "exit",
-            description: "Exit the Pokedex",
-            callback:    commandExit,
+            Name:        "exit",
+            Description: "Exit the Pokedex",
+            Callback:    commands.CommandExit,
         },
         "help": {
-            name: "help",
-            description: "Displays a help message",
-            callback: commandHelp,
+            Name: "help",
+            Description: "Displays a help message",
+            Callback: commands.CommandHelp,
+        },
+        "map": {
+            Name: "map",
+            Description: "Displays 20 locations in Pokemon World",
+            Callback: commands.CommandMap,
+        },
+        "mapb": {
+            Name: "mapb",
+            Description: "Return to last 20 locations showed",
+            Callback: commands.CommandMapBack,
         },
     }
-}
-
-func commandExit() error {
-    fmt.Println("Closing the Pokedex... Goodbye!")
-    os.Exit(0)
-    return nil
-}
-
-func commandHelp() error {
-    fmt.Println("Welcome to the Pokedex!")
-    fmt.Println("Usage:")
-    fmt.Println()
-    for _, v := range commandMap {
-        fmt.Printf("%v: %v\n", v.name, v.description)
-    }
-    return nil
 }
 
 func cleanInput(text string) []string {
@@ -54,23 +43,18 @@ func cleanInput(text string) []string {
 }
 
 func main() {
-    /*
-    result := cleanInput("Hello, world!  ")
-    for i := range result {
-        fmt.Println(result[i])
-    }
-    */
-    initializeCommand()
+    config := config.NewConfig()
+    InitializeCommand()
 
     scanner := bufio.NewScanner(os.Stdin)
 
     for {
-        // fmt.Print("Pokedex > ")
+        fmt.Print("Pokedex > ")
         scanner.Scan()
         input := scanner.Text()
 
-        if command, exists := commandMap[input]; exists {
-            command.callback()
+        if command, exists := commands.Commands[input]; exists {
+            command.Callback(config)
             continue;
         } else {
             fmt.Println("Unknown command")
