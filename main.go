@@ -5,35 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/zulkou/pokedex/internal/commands"
 	"github.com/zulkou/pokedex/internal/config"
+	"github.com/zulkou/pokedex/internal/pokecache"
 )
-
-func InitializeCommand() {
-    commands.Commands = map[string]commands.CliCommand{
-        "exit": {
-            Name:        "exit",
-            Description: "Exit the Pokedex",
-            Callback:    commands.CommandExit,
-        },
-        "help": {
-            Name: "help",
-            Description: "Displays a help message",
-            Callback: commands.CommandHelp,
-        },
-        "map": {
-            Name: "map",
-            Description: "Displays 20 locations in Pokemon World",
-            Callback: commands.CommandMap,
-        },
-        "mapb": {
-            Name: "mapb",
-            Description: "Return to last 20 locations showed",
-            Callback: commands.CommandMapBack,
-        },
-    }
-}
 
 func cleanInput(text string) []string {
     lowered := strings.ToLower(text)
@@ -43,8 +20,9 @@ func cleanInput(text string) []string {
 }
 
 func main() {
-    config := config.NewConfig()
-    InitializeCommand()
+    conf := config.NewConfig()
+    cache := pokecache.NewCache(30 * time.Second)
+    commands.InitializeCommand()
 
     scanner := bufio.NewScanner(os.Stdin)
 
@@ -54,7 +32,7 @@ func main() {
         input := scanner.Text()
 
         if command, exists := commands.Commands[input]; exists {
-            command.Callback(config)
+            command.Callback(conf, cache)
             continue;
         } else {
             fmt.Println("Unknown command")

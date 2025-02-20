@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/zulkou/pokedex/internal/pokecache"
 )
 
 type LocationArea struct {
@@ -15,7 +17,13 @@ type LocationArea struct {
     Previous    *string `json:"previous"`
 }
 
-func FetchLocation(url string) (*LocationArea, error) {
+func FetchLocation(url string, cache *pokecache.Cache) (*LocationArea, error) {
+    if data, found := cache.Get(url); found {
+        var location LocationArea
+        err := json.Unmarshal(data, &location)
+        return &location, err
+    }
+
     resp, err := http.Get(url)
     if err != nil {
         return nil, fmt.Errorf("error making API request: %w", err)
@@ -26,6 +34,8 @@ func FetchLocation(url string) (*LocationArea, error) {
     if err!= nil {
         return nil, fmt.Errorf("error reading response body: %w", err)
     }
+
+    cache.Add(url, body)
 
     var result LocationArea
     err = json.Unmarshal(body, &result)
