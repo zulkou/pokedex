@@ -22,6 +22,7 @@ func cleanInput(text string) []string {
 func main() {
     conf := config.NewConfig()
     cache := pokecache.NewCache(30 * time.Second)
+    defer cache.Close()
     commands.InitializeCommand()
 
     scanner := bufio.NewScanner(os.Stdin)
