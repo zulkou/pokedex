@@ -11,10 +11,18 @@ import (
 
 type LocationArea struct {
     Results []struct {
-        Name string `json:"name"`
+        Name    string `json:"name"`
     } `json:"results"`
     Next        *string `json:"next"`
     Previous    *string `json:"previous"`
+}
+
+type ExploreArea struct {
+    Encounters []struct {
+        Pokemon struct {
+            Name    string `json:"name"`
+        } `json:"pokemon"`
+    } `json:"pokemon_encounters"`
 }
 
 func FetchLocation(url string, cache *pokecache.Cache) (*LocationArea, error) {
@@ -38,6 +46,35 @@ func FetchLocation(url string, cache *pokecache.Cache) (*LocationArea, error) {
     cache.Add(url, body)
 
     var result LocationArea
+    err = json.Unmarshal(body, &result)
+    if err != nil {
+        return nil, fmt.Errorf("error parsing json: %w", err)
+    }
+
+    return &result, nil
+}
+
+func FetchExplore(url string, cache *pokecache.Cache) (*ExploreArea, error) {
+    if data, found := cache.Get(url); found {
+        var explore ExploreArea
+        err := json.Unmarshal(data, &explore)
+        return &explore, err
+    }
+
+    resp, err := http.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("error making API request: %w", err)
+    }
+    defer resp.Body.Close()
+
+    body, err := io.ReadAll(resp.Body)
+    if err!= nil {
+        return nil, fmt.Errorf("error reading response body: %w", err)
+    }
+
+    cache.Add(url, body)
+
+    var result ExploreArea
     err = json.Unmarshal(body, &result)
     if err != nil {
         return nil, fmt.Errorf("error parsing json: %w", err)

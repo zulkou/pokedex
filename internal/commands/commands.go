@@ -12,7 +12,7 @@ import (
 type CliCommand struct {
 	Name        string
 	Description string
-	Callback    func(cfg *config.Config, cache *pokecache.Cache) error
+	Callback    func(cfg *config.Config, cache *pokecache.Cache, args ...string) error
 }
 
 var Commands map[string]CliCommand
@@ -39,16 +39,21 @@ func InitializeCommand() {
             Description: "Return to last 20 locations showed",
             Callback: commandMapBack,
         },
+        "explore": {
+            Name: "explore",
+            Description: "Explore given location area",
+            Callback: commandExplore,
+        },
     }
 }
 
-func commandExit(cfg *config.Config, cache *pokecache.Cache) error {
+func commandExit(cfg *config.Config, cache *pokecache.Cache, args ...string) error {
     fmt.Println("Closing the Pokedex... Goodbye!")
     os.Exit(0)
     return nil
 }
 
-func commandHelp(cfg *config.Config, cache *pokecache.Cache) error {
+func commandHelp(cfg *config.Config, cache *pokecache.Cache, args ...string) error {
     fmt.Println("Welcome to the Pokedex!")
     fmt.Println("Usage:")
     fmt.Println()
@@ -58,7 +63,7 @@ func commandHelp(cfg *config.Config, cache *pokecache.Cache) error {
     return nil
 }
 
-func commandMap(cfg *config.Config, cache *pokecache.Cache) error {
+func commandMap(cfg *config.Config, cache *pokecache.Cache, args ...string) error {
     urlToUse := cfg.BaseURL
     if cfg.NextPageURL != nil {
         urlToUse = *cfg.NextPageURL
@@ -78,7 +83,7 @@ func commandMap(cfg *config.Config, cache *pokecache.Cache) error {
     return nil
 }
 
-func commandMapBack(cfg *config.Config, cache *pokecache.Cache) error {
+func commandMapBack(cfg *config.Config, cache *pokecache.Cache, args ...string) error {
     if cfg.PreviousPageURL == nil {
         fmt.Println("You're on the first page, there's no going back!")
         return nil
@@ -98,3 +103,19 @@ func commandMapBack(cfg *config.Config, cache *pokecache.Cache) error {
     return nil
 }
 
+func commandExplore(cfg *config.Config, cache *pokecache.Cache, args ...string) error {
+    currAreaURL := *&cfg.LocationAreaURL + args[0]
+
+    data, err := api.FetchExplore(currAreaURL, cache)
+    if err != nil {
+        return fmt.Errorf("failed to fetch exploration area: %w", err)
+    }
+
+    fmt.Printf("Exploring %v...\n", args[0])
+    fmt.Println("Found Pokemon:")
+    for _, encounter := range data.Encounters{
+        fmt.Println("-", encounter.Pokemon.Name)
+    }
+
+    return nil
+}

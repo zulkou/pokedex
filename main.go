@@ -30,10 +30,16 @@ func main() {
     for {
         fmt.Print("Pokedex > ")
         scanner.Scan()
-        input := scanner.Text()
+        input := strings.Split(scanner.Text(), " ")
 
-        if command, exists := commands.Commands[input]; exists {
-            command.Callback(conf, cache)
+        main := input[0]
+        args := input[1:]
+
+        if command, exists := commands.Commands[main]; exists {
+            err := command.Callback(conf, cache, args...)
+            if err != nil {
+                fmt.Println(err)
+            }
             continue;
         } else {
             fmt.Println("Unknown command")
