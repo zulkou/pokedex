@@ -56,6 +56,11 @@ func InitializeCommand() {
             Description: "Inspect caught pokemon",
             Callback: commandInspect,
         },
+        "pokedex": {
+            Name: "pokedex",
+            Description: "View pokedex list of caught pokemon",
+            Callback: commandPokedex,
+        },
     }
 }
 
@@ -146,6 +151,7 @@ func commandCatch(cfg *config.Config, cache *pokecache.Cache, pokedex *Pokedex, 
     if success {
         fmt.Printf("%v was caught!\n", pokemon.Name)
         pokedex.CaughtPokemon[pokemon.Name] = *pokemon
+        fmt.Println("You may now inspect it with the inspect command.")
     } else {
         fmt.Printf("%v escaped!\n", pokemon.Name)
     }
@@ -172,5 +178,15 @@ func commandInspect(cfg *config.Config, cache *pokecache.Cache, pokedex *Pokedex
         fmt.Printf(" - %v\n", t)
     }
     
+    return nil
+}
+
+func commandPokedex(cfg *config.Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
+    fmt.Println("Your Pokedex:")
+
+    for _, pokemon := range pokedex.CaughtPokemon {
+        fmt.Printf(" - %v\n", pokemon.Name)
+    }
+
     return nil
 }
