@@ -23,6 +23,7 @@ func main() {
     conf := config.NewConfig()
     cache := pokecache.NewCache(30 * time.Second)
     defer cache.Close()
+    pokedex := commands.NewPokedex()
     commands.InitializeCommand()
 
     scanner := bufio.NewScanner(os.Stdin)
@@ -36,7 +37,7 @@ func main() {
         args := input[1:]
 
         if command, exists := commands.Commands[main]; exists {
-            err := command.Callback(conf, cache, args...)
+            err := command.Callback(conf, cache, pokedex, args...)
             if err != nil {
                 fmt.Println(err)
             }
@@ -44,8 +45,5 @@ func main() {
         } else {
             fmt.Println("Unknown command")
         }
-
-        // clean_input := cleanInput(input)
-        // fmt.Printf("Your command was: %v\n", clean_input[0])
     }
 }

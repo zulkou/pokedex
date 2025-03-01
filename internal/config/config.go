@@ -6,11 +6,13 @@ type Config struct {
     PreviousPageURL *string
 
     LocationAreaURL string
+    PokemonURL      string
 }
 
 func NewConfig() *Config {
     return &Config{
         BaseURL: "https://pokeapi.co/api/v2/location-area",
         LocationAreaURL: "https://pokeapi.co/api/v2/location-area/",
+        PokemonURL: "https://pokeapi.co/api/v2/pokemon/",
     }
 }
