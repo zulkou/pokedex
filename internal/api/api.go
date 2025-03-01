@@ -12,7 +12,7 @@ import (
 type LocationArea struct {
     Results []struct {
         Name    string  `json:"name"`
-    }                   `json:"results"`
+    } `json:"results"`
     Next        *string `json:"next"`
     Previous    *string `json:"previous"`
 }
@@ -21,13 +21,35 @@ type ExploreArea struct {
     Encounters []struct {
         Pokemon struct {
             Name    string  `json:"name"`
-        }                   `json:"pokemon"`
-    }                       `json:"pokemon_encounters"`
+        } `json:"pokemon"`
+    } `json:"pokemon_encounters"`
 }
 
-type PokemonDetails struct {
-    Name    string  `json:"name"`
-    Chance  int     `json:"base_experience"`
+type Pokemon struct {
+    Name    string
+    Chance  int
+    Height  int
+    Weight  int
+    Stats   map[string]int
+    Types   []string
+}
+
+type RawPokemon struct {
+    Name    string              `json:"name"`
+    Chance  int                 `json:"base_experience"`
+    Height  int                 `json:"height"`
+    Weight  int                 `json:"weight"`
+    Stats   []struct {
+        BaseStat    int         `json:"base_stat"`
+        Stat        struct {
+            Name    string      `json:"name"`
+        } `json:"stat"`
+    } `json:"stats"`
+    Types   []struct {
+        Type        struct {
+            Name    string      `json:"name"`
+        } `json:"type"`
+    } `json:"types"`
 }
 
 func FetchLocation(url string, cache *pokecache.Cache) (*LocationArea, error) {
@@ -88,11 +110,11 @@ func FetchExplore(url string, cache *pokecache.Cache) (*ExploreArea, error) {
     return &result, nil
 }
 
-func FetchPokemon(url string, cache *pokecache.Cache) (*PokemonDetails, error) {
+func FetchPokemon(url string, cache *pokecache.Cache) (*Pokemon, error) {
     if data, found := cache.Get(url); found {
-        var pokemon PokemonDetails
+        var pokemon RawPokemon
         err := json.Unmarshal(data, &pokemon)
-        return &pokemon, err
+        return pokemon.pokemonTransformer(), err
     }
 
     resp, err := http.Get(url)
@@ -108,11 +130,32 @@ func FetchPokemon(url string, cache *pokecache.Cache) (*PokemonDetails, error) {
 
     cache.Add(url, body)
 
-    var result PokemonDetails
+    var result RawPokemon
     err = json.Unmarshal(body, &result)
     if err != nil {
         return nil, fmt.Errorf("error parsing json: %w", err)
     }
 
-    return &result, nil
+    return result.pokemonTransformer(), nil
+}
+
+func (raw *RawPokemon)pokemonTransformer() (*Pokemon) {
+    pokemon := &Pokemon {
+        Name: raw.Name,
+        Chance: raw.Chance,
+        Weight: raw.Weight,
+        Height: raw.Height,
+        Stats: make(map[string]int),
+        Types: make([]string, 0),
+    }
+
+    for _, statObj := range raw.Stats {
+        pokemon.Stats[statObj.Stat.Name] = statObj.BaseStat
+    }
+    
+    for _, typeObj := range raw.Types {
+        pokemon.Types = append(pokemon.Types, typeObj.Type.Name)
+    }
+
+    return pokemon
 }

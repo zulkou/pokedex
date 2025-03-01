@@ -51,6 +51,11 @@ func InitializeCommand() {
             Description: "Try catch given pokemon",
             Callback: commandCatch,
         },
+        "inspect": {
+            Name: "inspect <pokemon>",
+            Description: "Inspect caught pokemon",
+            Callback: commandInspect,
+        },
     }
 }
 
@@ -145,5 +150,27 @@ func commandCatch(cfg *config.Config, cache *pokecache.Cache, pokedex *Pokedex, 
         fmt.Printf("%v escaped!\n", pokemon.Name)
     }
 
+    return nil
+}
+
+func commandInspect(cfg *config.Config, cache *pokecache.Cache, pokedex *Pokedex, args ...string) error {
+    pokemon, exists := pokedex.CaughtPokemon[args[0]]; if !exists {
+        fmt.Println("you have not caught that pokemon")
+
+        return nil
+    }
+
+    fmt.Printf("Name: %v\n", pokemon.Name)
+    fmt.Printf("Height: %v\n", pokemon.Height)
+    fmt.Printf("Weight: %v\n", pokemon.Weight)
+    fmt.Println("Stats:")
+    for key, val := range pokemon.Stats {
+        fmt.Printf(" -%v: %v\n", key, val)
+    }
+    fmt.Println("Types:")
+    for _, t := range pokemon.Types {
+        fmt.Printf(" - %v\n", t)
+    }
+    
     return nil
 }
